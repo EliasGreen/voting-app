@@ -1,0 +1,14 @@
+.pollCard {
+  color: white;
+  padding: 10px;
+  margin: 10px;
+  text-align: center;
+  border: 5px solid white;
+}
+
+.pollCard:hover {
+  cursor: pointer;
+  color: #0670ad;
+  font-weight: bold;
+  border: 5px solid #0670ad;
+}
