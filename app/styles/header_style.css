@@ -1,0 +1,18 @@
+.icon:hover {
+  color: #f44256;
+}
+
+
+.main-label:hover {
+  color: #7ac162;
+}
+
+.header {
+  top: 0;
+  left: 0;
+}
+
+.link {
+  color: white;
+  font-weight: bold;
+}
