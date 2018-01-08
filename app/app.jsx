@@ -18,6 +18,7 @@ let isLogedIn;
 const Main = require('./components/Main');
 const Login = require('./components/Login');
 const CreateAccount = require('./components/CreateAccount');
+const UserPolls = require('./components/UserPolls');
 
 // send GET request to check if user is Loged in
 console.log("main component");
@@ -44,6 +45,7 @@ const xhr = new XMLHttpRequest();
               <Route exact path="/" component={Main}/>
               <Route path="/login" component={Login}/>
               <Route path="/create-account" component={CreateAccount}/>
+              <Route path="/user-polls" component={UserPolls}/>
             </div>
           </BrowserRouter>
         </Provider>), document.getElementById('main'));

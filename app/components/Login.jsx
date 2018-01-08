@@ -30,7 +30,6 @@ class Login extends React.Component {
   
     handleSubmit(event) {
       let that = this;
-      /* JUST PLAYGROUND */
       const xhr = new XMLHttpRequest();
       
       xhr.open('POST', '/login', true);
@@ -62,7 +61,6 @@ class Login extends React.Component {
            });
          }
         }
-       /* JUST PLAYGROUND */
       event.preventDefault();
      }
     
