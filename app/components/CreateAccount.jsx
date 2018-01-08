@@ -66,7 +66,7 @@ class CreateAccount extends React.Component {
               </ReactTooltip>
 
               <div className="clearfix">
-                <button type="submit" className="signupbtn"  data-toggle="tooltip" title="Tooltip on top">Sign Up</button>
+                <button type="submit" className="signupbtn">Sign Up</button>
               </div>
             </div>
           </form>
