@@ -7,30 +7,51 @@ const style = require('../styles/userPolls_style');
 class UserPolls extends React.Component {
    constructor(props) {
     super(props);
+     this.state = {
+      container: "loading...",
+      value: "zero"
+    };
     this.handleCreatePoll = this.handleCreatePoll.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
   
   handleCreatePoll(event) {
-            // Get the modal
         var modal = document.getElementById('myModal');
-        // Get the <span> element that closes the modal
         var span = document.getElementsByClassName("close")[0];
         modal.style.display = "block";
-        // When the user clicks on <span> (x), close the modal
         span.onclick = function() {
             modal.style.display = "none";
         }
-        // When the user clicks anywhere outside of the modal, close it
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
             }
         }
   }
-  
+     componentWillMount() {
+      let that = this;
+      const xhr = new XMLHttpRequest();
+      
+      xhr.open('POST', '/get-user-polls', true);
+      xhr.send();
+
+      xhr.onreadystatechange = function() {
+        if (this.readyState != 4) return;
+        if (this.status != 200) {
+          alert( 'error: ' + (this.status ? this.statusText : 'request has not been set') );
+          return;
+        }
+          let response = JSON.parse(this.responseText);
+          console.log(response.user);
+          let setPolls  = response.user.map((obj, i)  => {
+          return <Link to={'/polls/'+ obj["_id"]} key={i}><PollCardDEL name={obj.name} id={obj["_id"]}/></Link>;
+          });
+          that.setState({
+            ["container"]: setPolls
+             });
+        }
+   }
   handleSubmit(event) {
-      alert("WORKS YEE");
     }
   
   render() {
@@ -39,15 +60,15 @@ class UserPolls extends React.Component {
             <div className="body">
               <Header />
                <button type="button" className="btn btn-primary" onClick={this.handleCreatePoll}>Create new poll</button>
-               <PollCardDEL name="custom poll"/>
+              {this.state.container}
             </div>     
               <div id="myModal" className="modal">
                    <div className="modal-content">
                    <form action="/create-new-poll" method="post" style={{"maxWidth":"100%"}} onSubmit={this.handleSubmit}>
                       <span className="close">&times;</span>
-                      <h4>Name of new poll</h4>
+                      <h4 style={{"color":"#a8d43f"}}>Name of new poll</h4>
                       <input type="text" name="nameOfNewPoll" placeholder="Do you like oranges?" required/>
-                      <h4>Options of new poll</h4>
+                      <h4 style={{"color":"#a8d43f"}}>Options of new poll</h4>
                       <input type="text" name="optionsOfNewPoll" placeholder="yes,no,IDK,maybe,it's disgusting" required/>
                       <button type="submit">create</button>
                     </form>

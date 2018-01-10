@@ -11,7 +11,7 @@ class Header extends React.Component {
     super(props);
     this.state = {
       LogDiv: "",
-      IndPollsDiv: ""
+      IndPollsDiv: ""    
     };
     this.handleLogOut = this.handleLogOut.bind(this);
   }

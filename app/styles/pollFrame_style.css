@@ -1,0 +1,45 @@
+.frame{
+  color: white;
+  background-color: #d61b78;
+  max-width: 100%;
+  width: 100%;
+  padding: 10px;
+  margin-top: 50px;
+  text-align: center;
+  border: 5px solid #09628c;
+}
+form {
+  max-width: 600px;
+  background-color: #013350;
+}
+select {
+  border: 1px solid #111;
+  background: transparent;
+  width: 100%;
+  padding: 5px 35px 5px 5px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  height: 34px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: url(https://cdn0.iconfinder.com/data/icons/thin-voting-awards/24/thin-0665_vote_ticket_paper_voting-512.png) 96% / 15% no-repeat #eee;
+}
+
+/* CAUTION: IE hackery ahead */
+select::-ms-expand { 
+    display: none; /* remove default arrow on ie10 and ie11 */
+}
+
+/* target Internet Explorer 9 to undo the custom arrow */
+@media screen and (min-width:0\0) {
+    select {
+        background:none\9;
+        padding: 0.5px;
+    } 
+}
+
+.label-text {
+  font-weight: bold;
+  color: #f4425c;
+}
