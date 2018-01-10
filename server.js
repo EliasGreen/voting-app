@@ -1,5 +1,3 @@
-// server.js
-
 // init project
 const express = require('express');
 const app = express();
@@ -32,7 +30,7 @@ const promise_connection = mongoose.connect(url, {
 });
 let db = mongoose.connection;
 /******************************/
-// set the store for sessions
+// set store
 /******************************/
 let store = new MongoDBStore(
       {
@@ -45,10 +43,10 @@ let store = new MongoDBStore(
       assert.ok(false);
     });
 /******************************/
-// set USEs for Application
+// set USEs for app
 /******************************/
-app.use( bodyParser.json() );       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+app.use( bodyParser.json() );   
+app.use(bodyParser.urlencoded({ 
   extended: true
 }));
 /***/
@@ -70,6 +68,8 @@ app.use(passport.session());
 /***/
 app.use(express.static('public'));
 /******************************/
+// mongoDB models and schemas
+/******************************/
 // if connection is success
 promise_connection.then(function(db){
 	console.log('Connected to mongodb');
@@ -90,7 +90,8 @@ let pollSchema = new Schema({
 let userModel = mongoose.model('users', userSet);
 let pollModel = mongoose.model('polls', pollSchema);
 /******************************/
-// main page
+// handle pages
+/******************************/
 app.get("*", function(request, response) {
   //console.log(request.session);
   if(request.path == "/islogedin") {
@@ -100,6 +101,10 @@ app.get("*", function(request, response) {
   // prevent LOGIN page from "get by authenticated user"
   else if(request.path == "/login" && request.isAuthenticated() === true) {
     response.send("ERROR: you are already authenticated");
+  }
+   // prevent USER POLLS page from "get by not authenticated user"
+  else if(request.path == "/user-polls" && request.isAuthenticated() === false) {
+    response.redirect("/login");
   }
         else {
   response.sendFile(__dirname + '/app/index.html');
@@ -127,23 +132,20 @@ app.post("/register", function(request, response) {
         });
     });
 });
-/************************************************/
-// handle login method
+/******************************/
+// POST METHODS
+/******************************/
 app.post("/login", function(request, response) {
-  // login after registration
             userModel.find({ email: request.body["email"]}, function (err, document) {
               if(!err) {
-                // if document has NOT been found
                 if(document.length == 0) {
                   response.json({"error": "error0"});
                 }
-                // if document has been found
                 else if(document.length == 1) {
                 bcrypt.compare(request.body["password"], document[0]["password"], function(err, res) {
                 if(res === true) {
                 let user_id = document[0]["id"];
                 request.login(user_id, () => {
-                  // send to user main page
                      response.json({"error": 0});
                            });
                         }
@@ -158,65 +160,157 @@ app.post("/login", function(request, response) {
         });
     });
 /************************************************/
+/************************************************/
+/************************************************/
 app.post("/create-new-poll", (request, response) => {
-  //response.json({id: request.session.passport.user});
   let options = request.body["optionsOfNewPoll"].split(",");
   let optionsToSend = [];
   for(let i = 0; i < options.length; i++) {
     optionsToSend.push([options[i], 0]);
   }
-  // create a poll in POLLS collection
         let obj = {name: request.body["nameOfNewPoll"], options: optionsToSend};
         let poll = new pollModel(obj);
         poll.save(function (err) {
           if (!err) console.log('Success!');
         });
-  // create a poll in user polls in USERS collection
             userModel.find({_id: request.session.passport.user}, function (err, document) {
               if(!err) {
-                // if document has NOT been found
                 if(document.length == 0) {
                   response.json({"error": "document has not been found"});
                 }
-                // if document has been found
                 else if(document.length == 1) {
-                  //console.log(document);
                       document[0].polls.push(poll);
                       document[0].save(function (err, document) {
-                           if (!err) response.send(document);
+                           if (!err) response.redirect("/user-polls");
                      });            
-                 // response.send(document);
                 }
             }
         });
- // response.send(request.body["nameOfNewPoll"] + " AND " + options.length);
 });
 /************************************************/
-// handle logout method
+/************************************************/
+/************************************************/
+app.post("/get-polls", (request, response) => {
+     pollModel.find({}, (err, listOfPolls) => {
+       response.json({list: listOfPolls});
+     });
+});
+/************************************************/
+/************************************************/
+/************************************************/
+app.post("/get-user-polls", (request, response) => {
+     userModel.find({_id: request.session.passport.user}, (err, user) => {
+       response.json({user: user[0].polls});
+     });
+});
+/************************************************/
+/************************************************/
+/************************************************/
+app.post("/update-poll", (request, response) => {
+  let error_mes = "yes";
+    pollModel.findById(request.body["id"], (err, poll) => {
+      
+     let findPoll = (element, index, array) => {
+          if(element.name == poll.name) {
+            return element;
+          }
+        }
+      let findOption = (element, index, array) => {
+          if(element[0] == request.body["value"]) {
+            return element;
+          }
+        }
+      
+          userModel.find({"polls.name": poll.name}, (err, user) => {
+            let ind = user[0].polls.findIndex(findPoll);
+           user[0].polls[ind].options[user[0].polls[ind].options.findIndex(findOption)][1] += 1;
+            //updating
+          userModel.findOneAndUpdate({_id: user[0]["_id"]}, user[0], (err, doc) => {
+                  if(!err) {
+                    error_mes = "not";
+                  }
+                });
+            pollModel.findOneAndUpdate({name: poll.name}, user[0].polls[ind], (err, doc) => {
+                  if(!err) {
+                    error_mes = "not";
+                    response.json({error: error_mes});
+                  }
+                });
+                });
+     });
+});
+/************************************************/
+/************************************************/
+/************************************************/
+app.post("/delete-poll", (request, response) => {
+  // console.log(request.body["id"]);
+  // response.json({resp: "test"});
+  pollModel.findById(request.body["id"], (err, poll) => {
+      
+     let findPoll = (element, index, array) => {
+          if(element.name == poll.name) {
+            return element;
+          }
+        }
+      let findOption = (element, index, array) => {
+          if(element[0] == request.body["value"]) {
+            return element;
+          }
+        }
+      
+          userModel.find({"polls.name": poll.name}, (err, user) => {
+            let ind = user[0].polls.findIndex(findPoll);
+           user[0].polls.splice(ind, 1);
+            //updating
+          userModel.findOneAndUpdate({_id: user[0]["_id"]}, user[0], (err, doc) => {
+                  if(!err) {
+                    console.log("suc!0");
+                  }
+                });
+            pollModel.remove({name: poll.name}, (err, doc) => {
+                  if(!err) {
+                    console.log("suc!1");
+                    response.json({error: "nouuu"});
+                  }
+                });
+                });
+     });
+});
+/************************************************/
+/************************************************/
+/************************************************/
+app.post("/get-poll", (request, response) => {
+     pollModel.findById(request.body["id"], (err, poll) => {
+       response.json({list: poll});
+     });
+});
+/************************************************/
+/************************************************/
+/************************************************/
 app.post("/logout", function(request, response) {
-  // logout on click on btn Logout
           request.logout();
           request.session.destroy(function(err) {
            response.status(200).clearCookie('connect.sid', {path: '/'}).json({error: 0});
           })
     });
-// global login methods
+/******************************/
+// user sessions handlers:
+/******************************/
 passport.serializeUser(function(user_id, done) {
   done(null, user_id);
 });
 passport.deserializeUser(function(user_id, done) {
     done(null, user_id);
 });
-// check is a user Loged In
 function checkAuthentication(req,res,next){
     if(req.isAuthenticated()){
-        //if user is looged in, req.isAuthenticated() will return true 
         next();
     } else{
         res.redirect("/login");
     }
 }
-// listen for requests
+/************************************************/
+// app listener
 const listener = app.listen(process.env.PORT, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
